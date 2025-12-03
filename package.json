@@ -1,0 +1,62 @@
+{
+  "name": "codewarrior",
+  "displayName": "Code Warrior",
+  "description": "Fight bugs and level up as you code in VS Code!",
+  "version": "0.0.1",
+  "publisher": "syauqisuhaimi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syauqisuhaimi/codewarrior.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "code-reward.showStats",
+        "title": "Code Reward: Show Stats"
+      },
+      {
+        "command": "code-reward.resetStats",
+        "title": "Code Reward: Reset Stats"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "code-reward-sidebar",
+          "title": "Code Reward",
+          "icon": "$(star)"
+        }
+      ]
+    },
+    "views": {
+      "code-reward-sidebar": [
+        {
+          "type": "webview",
+          "id": "code-reward.sidebar",
+          "name": "Stats"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@types/node": "20.x",
+    "typescript": "^5.4.5"
+  }
+}

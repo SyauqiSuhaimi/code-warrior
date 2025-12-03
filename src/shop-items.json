@@ -1,0 +1,16 @@
+[
+  {
+    "id": "sword-1",
+    "name": "Iron Sword",
+    "attack": 2,
+    "price": 100,
+    "bought": false
+  },
+  {
+    "id": "sword-2",
+    "name": "Iron Sword 2",
+    "attack": 2,
+    "price": 50,
+    "bought": false
+  }
+]
