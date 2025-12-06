@@ -1,28 +1,27 @@
 import * as vscode from "vscode";
-import shopItemsData from "./shop-items.json";
 
-export interface ShopItem {
-  id: string;
-  name: string;
-  attack: number;
-  price: number;
-  bought: boolean;
+export interface PlayerAttributes {
+  damageLevel: number;
+  critChanceLevel: number;
+  critMultiplierLevel: number;
 }
 
 export interface IGameState {
   money: number;
   level: number;
   enemyCurrentHp: number;
-  shopItems: ShopItem[];
-  attackMultiplier: number;
+  attributes: PlayerAttributes;
 }
 
 export class GameState {
   private _money: number = 0;
   private _level: number = 1;
   private _enemyCurrentHp: number = 100;
-  private _shopItems: ShopItem[] = [];
-  private _attackMultiplier: number = 1;
+  private _attributes: PlayerAttributes = {
+    damageLevel: 1,
+    critChanceLevel: 0,
+    critMultiplierLevel: 0,
+  };
   private readonly _context: vscode.ExtensionContext;
   private readonly _storageKey = "code-reward-engine.state";
   private _onDidLevelUp = new vscode.EventEmitter<number>();
@@ -43,35 +42,14 @@ export class GameState {
       this._money = state.money;
       this._level = state.level;
       this._enemyCurrentHp = state.enemyCurrentHp;
-      this._shopItems = this.mergeShopItems(state.shopItems);
-      this._attackMultiplier = state.attackMultiplier || 1;
+      this._attributes = state.attributes || {
+        damageLevel: 1,
+        critChanceLevel: 0,
+        critMultiplierLevel: 0,
+      };
     } else {
-      this._shopItems = this.initializeShopItems();
       this.resetEnemy();
     }
-  }
-
-  private initializeShopItems(): ShopItem[] {
-    return JSON.parse(JSON.stringify(shopItemsData));
-  }
-
-  private mergeShopItems(savedItems: ShopItem[] | undefined): ShopItem[] {
-    const freshItems = this.initializeShopItems();
-
-    if (!savedItems) {
-      return freshItems;
-    }
-
-    // Merge: keep purchase status from saved items, add new items from JSON
-    return freshItems.map((freshItem) => {
-      const savedItem = savedItems.find((s) => s.id === freshItem.id);
-      if (savedItem) {
-        // Item exists in saved state, preserve its bought status
-        return { ...freshItem, bought: savedItem.bought };
-      }
-      // New item from JSON
-      return freshItem;
-    });
   }
 
   private saveState() {
@@ -79,8 +57,7 @@ export class GameState {
       money: this._money,
       level: this._level,
       enemyCurrentHp: this._enemyCurrentHp,
-      shopItems: this._shopItems,
-      attackMultiplier: this._attackMultiplier,
+      attributes: this._attributes,
     };
     this._context.globalState.update(this._storageKey, state);
     this._onDidChangeState.fire();
@@ -102,16 +79,60 @@ export class GameState {
     return 100 * this._level;
   }
 
-  public get shopItems(): ShopItem[] {
-    return this._shopItems;
+  public get attributes(): PlayerAttributes {
+    return { ...this._attributes };
   }
 
-  public get attackMultiplier(): number {
-    return this._attackMultiplier;
+  // Calculate base damage from damage level
+  private getBaseDamage(): number {
+    return this._attributes.damageLevel;
+  }
+
+  // Calculate crit chance (0-100%)
+  private getCritChance(): number {
+    // Each level adds 5% crit chance, max 100%
+    return Math.min(100, this._attributes.critChanceLevel * 5);
+  }
+
+  // Calculate crit multiplier
+  private getCritMultiplier(): number {
+    // Base 1.5x, each level adds 0.25x
+    return 1.5 + this._attributes.critMultiplierLevel * 0.25;
+  }
+
+  // Get computed attribute values for display
+  public getComputedAttributes() {
+    return {
+      damage: this.getBaseDamage(),
+      critChance: this.getCritChance(),
+      critMultiplier: this.getCritMultiplier(),
+      damageLevel: this._attributes.damageLevel,
+      critChanceLevel: this._attributes.critChanceLevel,
+      critMultiplierLevel: this._attributes.critMultiplierLevel,
+    };
+  }
+
+  // Calculate upgrade cost for each attribute
+  public getUpgradeCost(attribute: keyof PlayerAttributes): number {
+    const currentLevel = this._attributes[attribute];
+    const baseCosts = {
+      damageLevel: 100,
+      critChanceLevel: 150,
+      critMultiplierLevel: 200,
+    };
+    // Cost increases exponentially: baseCost * (1.5 ^ currentLevel)
+    return Math.floor(baseCosts[attribute] * Math.pow(1.5, currentLevel));
   }
 
   public dealDamage(amount: number) {
-    const actualDamage = amount * this._attackMultiplier;
+    const baseDamage = this.getBaseDamage() * amount;
+    const critChance = this.getCritChance();
+    const critMultiplier = this.getCritMultiplier();
+
+    // Roll for crit
+    const isCrit = Math.random() * 100 < critChance;
+    const actualDamage = isCrit ? baseDamage * critMultiplier : baseDamage;
+
     this._enemyCurrentHp -= actualDamage;
     if (this._enemyCurrentHp <= 0) {
       this.handleEnemyDefeated();
@@ -132,15 +153,14 @@ export class GameState {
     this._enemyCurrentHp = this.enemyMaxHp;
   }
 
-  public purchaseItem(itemId: string): boolean {
-    const item = this._shopItems.find((i) => i.id === itemId);
-    if (!item || item.bought || this._money < item.price) {
+  public upgradeAttribute(attribute: keyof PlayerAttributes): boolean {
+    const cost = this.getUpgradeCost(attribute);
+    if (this._money < cost) {
       return false;
     }
 
-    this._money -= item.price;
-    item.bought = true;
-    this._attackMultiplier += item.attack;
+    this._money -= cost;
+    this._attributes[attribute]++;
     this.saveState();
     return true;
   }
@@ -148,8 +168,11 @@ export class GameState {
   public reset() {
     this._money = 0;
     this._level = 1;
-    this._shopItems = this.initializeShopItems();
-    this._attackMultiplier = 1;
+    this._attributes = {
+      damageLevel: 1,
+      critChanceLevel: 0,
+      critMultiplierLevel: 0,
+    };
     this.resetEnemy();
     this.saveState();
   }

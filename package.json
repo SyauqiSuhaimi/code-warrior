@@ -2,7 +2,7 @@
   "name": "codewarrior",
   "displayName": "Code Warrior",
   "description": "Fight bugs and level up as you code in VS Code!",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "syauqisuhaimi",
   "repository": {
     "type": "git",
@@ -12,6 +12,7 @@
   "engines": {
     "vscode": "^1.90.0"
   },
+  "icon": "resources/icon-removebg-preview.png",
   "categories": [
     "Other"
   ],
@@ -34,8 +35,8 @@
       "activitybar": [
         {
           "id": "code-reward-sidebar",
-          "title": "Code Reward",
-          "icon": "$(star)"
+          "title": "Code Warrior",
+          "icon": "resources/icon-removebg-preview.png"
         }
       ]
     },
@@ -44,7 +45,8 @@
         {
           "type": "webview",
           "id": "code-reward.sidebar",
-          "name": "Stats"
+          "name": "Stats",
+          "icon": "resources/icon-removebg-preview.png"
         }
       ]
     }

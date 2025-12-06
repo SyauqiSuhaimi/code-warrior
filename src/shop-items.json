@@ -8,9 +8,555 @@
   },
   {
     "id": "sword-2",
-    "name": "Iron Sword 2",
+    "name": "Steel Sword",
+    "attack": 4,
+    "price": 200,
+    "bought": false
+  },
+  {
+    "id": "sword-3",
+    "name": "Silver Sword",
+    "attack": 6,
+    "price": 350,
+    "bought": false
+  },
+  {
+    "id": "sword-4",
+    "name": "Golden Sword",
+    "attack": 8,
+    "price": 500,
+    "bought": false
+  },
+  {
+    "id": "sword-5",
+    "name": "Platinum Sword",
+    "attack": 10,
+    "price": 750,
+    "bought": false
+  },
+  {
+    "id": "axe-1",
+    "name": "Iron Axe",
+    "attack": 3,
+    "price": 120,
+    "bought": false
+  },
+  {
+    "id": "axe-2",
+    "name": "Steel Axe",
+    "attack": 5,
+    "price": 250,
+    "bought": false
+  },
+  {
+    "id": "axe-3",
+    "name": "Silver Axe",
+    "attack": 7,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "axe-4",
+    "name": "Golden Axe",
+    "attack": 9,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "axe-5",
+    "name": "Platinum Axe",
+    "attack": 11,
+    "price": 800,
+    "bought": false
+  },
+  {
+    "id": "dagger-1",
+    "name": "Iron Dagger",
+    "attack": 1,
+    "price": 80,
+    "bought": false
+  },
+  {
+    "id": "dagger-2",
+    "name": "Steel Dagger",
     "attack": 2,
-    "price": 50,
+    "price": 150,
+    "bought": false
+  },
+  {
+    "id": "dagger-3",
+    "name": "Silver Dagger",
+    "attack": 3,
+    "price": 250,
+    "bought": false
+  },
+  {
+    "id": "dagger-4",
+    "name": "Golden Dagger",
+    "attack": 4,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "dagger-5",
+    "name": "Platinum Dagger",
+    "attack": 5,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "bow-1",
+    "name": "Wooden Bow",
+    "attack": 2,
+    "price": 90,
+    "bought": false
+  },
+  {
+    "id": "bow-2",
+    "name": "Hunting Bow",
+    "attack": 4,
+    "price": 200,
+    "bought": false
+  },
+  {
+    "id": "bow-3",
+    "name": "Longbow",
+    "attack": 6,
+    "price": 350,
+    "bought": false
+  },
+  {
+    "id": "bow-4",
+    "name": "Composite Bow",
+    "attack": 8,
+    "price": 500,
+    "bought": false
+  },
+  {
+    "id": "bow-5",
+    "name": "Elven Bow",
+    "attack": 10,
+    "price": 750,
+    "bought": false
+  },
+  {
+    "id": "staff-1",
+    "name": "Apprentice Staff",
+    "attack": 2,
+    "price": 100,
+    "bought": false
+  },
+  {
+    "id": "staff-2",
+    "name": "Mage Staff",
+    "attack": 4,
+    "price": 220,
+    "bought": false
+  },
+  {
+    "id": "staff-3",
+    "name": "Sorcerer Staff",
+    "attack": 6,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "staff-4",
+    "name": "Archmage Staff",
+    "attack": 8,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "staff-5",
+    "name": "Legendary Staff",
+    "attack": 12,
+    "price": 900,
+    "bought": false
+  },
+  {
+    "id": "mace-1",
+    "name": "Iron Mace",
+    "attack": 3,
+    "price": 110,
+    "bought": false
+  },
+  {
+    "id": "mace-2",
+    "name": "Steel Mace",
+    "attack": 5,
+    "price": 230,
+    "bought": false
+  },
+  {
+    "id": "mace-3",
+    "name": "Silver Mace",
+    "attack": 7,
+    "price": 380,
+    "bought": false
+  },
+  {
+    "id": "mace-4",
+    "name": "Golden Mace",
+    "attack": 9,
+    "price": 550,
+    "bought": false
+  },
+  {
+    "id": "mace-5",
+    "name": "Platinum Mace",
+    "attack": 11,
+    "price": 800,
+    "bought": false
+  },
+  {
+    "id": "spear-1",
+    "name": "Iron Spear",
+    "attack": 2,
+    "price": 100,
+    "bought": false
+  },
+  {
+    "id": "spear-2",
+    "name": "Steel Spear",
+    "attack": 4,
+    "price": 220,
+    "bought": false
+  },
+  {
+    "id": "spear-3",
+    "name": "Silver Spear",
+    "attack": 6,
+    "price": 380,
+    "bought": false
+  },
+  {
+    "id": "spear-4",
+    "name": "Golden Spear",
+    "attack": 8,
+    "price": 550,
+    "bought": false
+  },
+  {
+    "id": "spear-5",
+    "name": "Platinum Spear",
+    "attack": 10,
+    "price": 800,
+    "bought": false
+  },
+  {
+    "id": "crossbow-1",
+    "name": "Light Crossbow",
+    "attack": 3,
+    "price": 120,
+    "bought": false
+  },
+  {
+    "id": "crossbow-2",
+    "name": "Heavy Crossbow",
+    "attack": 6,
+    "price": 300,
+    "bought": false
+  },
+  {
+    "id": "crossbow-3",
+    "name": "Repeating Crossbow",
+    "attack": 8,
+    "price": 500,
+    "bought": false
+  },
+  {
+    "id": "crossbow-4",
+    "name": "Arbalest",
+    "attack": 10,
+    "price": 750,
+    "bought": false
+  },
+  {
+    "id": "crossbow-5",
+    "name": "Dragon Crossbow",
+    "attack": 12,
+    "price": 1000,
+    "bought": false
+  },
+  {
+    "id": "hammer-1",
+    "name": "Iron Hammer",
+    "attack": 3,
+    "price": 130,
+    "bought": false
+  },
+  {
+    "id": "hammer-2",
+    "name": "Steel Hammer",
+    "attack": 5,
+    "price": 250,
+    "bought": false
+  },
+  {
+    "id": "hammer-3",
+    "name": "Silver Hammer",
+    "attack": 7,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "hammer-4",
+    "name": "Golden Hammer",
+    "attack": 9,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "hammer-5",
+    "name": "Titan Hammer",
+    "attack": 12,
+    "price": 900,
+    "bought": false
+  },
+  {
+    "id": "katana-1",
+    "name": "Iron Katana",
+    "attack": 4,
+    "price": 200,
+    "bought": false
+  },
+  {
+    "id": "katana-2",
+    "name": "Steel Katana",
+    "attack": 6,
+    "price": 350,
+    "bought": false
+  },
+  {
+    "id": "katana-3",
+    "name": "Silver Katana",
+    "attack": 8,
+    "price": 500,
+    "bought": false
+  },
+  {
+    "id": "katana-4",
+    "name": "Golden Katana",
+    "attack": 10,
+    "price": 750,
+    "bought": false
+  },
+  {
+    "id": "katana-5",
+    "name": "Dragon Katana",
+    "attack": 12,
+    "price": 1000,
+    "bought": false
+  },
+  {
+    "id": "scythe-1",
+    "name": "Rusty Scythe",
+    "attack": 3,
+    "price": 100,
+    "bought": false
+  },
+  {
+    "id": "scythe-2",
+    "name": "Iron Scythe",
+    "attack": 5,
+    "price": 250,
+    "bought": false
+  },
+  {
+    "id": "scythe-3",
+    "name": "Steel Scythe",
+    "attack": 7,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "scythe-4",
+    "name": "Silver Scythe",
+    "attack": 9,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "scythe-5",
+    "name": "Golden Scythe",
+    "attack": 11,
+    "price": 850,
+    "bought": false
+  },
+  {
+    "id": "flail-1",
+    "name": "Iron Flail",
+    "attack": 3,
+    "price": 120,
+    "bought": false
+  },
+  {
+    "id": "flail-2",
+    "name": "Steel Flail",
+    "attack": 5,
+    "price": 250,
+    "bought": false
+  },
+  {
+    "id": "flail-3",
+    "name": "Silver Flail",
+    "attack": 7,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "flail-4",
+    "name": "Golden Flail",
+    "attack": 9,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "flail-5",
+    "name": "Platinum Flail",
+    "attack": 11,
+    "price": 850,
+    "bought": false
+  },
+  {
+    "id": "claymore-1",
+    "name": "Iron Claymore",
+    "attack": 5,
+    "price": 200,
+    "bought": false
+  },
+  {
+    "id": "claymore-2",
+    "name": "Steel Claymore",
+    "attack": 7,
+    "price": 350,
+    "bought": false
+  },
+  {
+    "id": "claymore-3",
+    "name": "Silver Claymore",
+    "attack": 9,
+    "price": 550,
+    "bought": false
+  },
+  {
+    "id": "claymore-4",
+    "name": "Golden Claymore",
+    "attack": 11,
+    "price": 800,
+    "bought": false
+  },
+  {
+    "id": "claymore-5",
+    "name": "Dragon Claymore",
+    "attack": 13,
+    "price": 1100,
+    "bought": false
+  },
+  {
+    "id": "trident-1",
+    "name": "Iron Trident",
+    "attack": 4,
+    "price": 180,
+    "bought": false
+  },
+  {
+    "id": "trident-2",
+    "name": "Steel Trident",
+    "attack": 6,
+    "price": 300,
+    "bought": false
+  },
+  {
+    "id": "trident-3",
+    "name": "Silver Trident",
+    "attack": 8,
+    "price": 500,
+    "bought": false
+  },
+  {
+    "id": "trident-4",
+    "name": "Golden Trident",
+    "attack": 10,
+    "price": 750,
+    "bought": false
+  },
+  {
+    "id": "trident-5",
+    "name": "Poseidon Trident",
+    "attack": 12,
+    "price": 1000,
+    "bought": false
+  },
+  {
+    "id": "rapier-1",
+    "name": "Iron Rapier",
+    "attack": 2,
+    "price": 120,
+    "bought": false
+  },
+  {
+    "id": "rapier-2",
+    "name": "Steel Rapier",
+    "attack": 4,
+    "price": 250,
+    "bought": false
+  },
+  {
+    "id": "rapier-3",
+    "name": "Silver Rapier",
+    "attack": 6,
+    "price": 400,
+    "bought": false
+  },
+  {
+    "id": "rapier-4",
+    "name": "Golden Rapier",
+    "attack": 8,
+    "price": 600,
+    "bought": false
+  },
+  {
+    "id": "rapier-5",
+    "name": "Platinum Rapier",
+    "attack": 10,
+    "price": 850,
+    "bought": false
+  },
+  {
+    "id": "halberd-1",
+    "name": "Iron Halberd",
+    "attack": 5,
+    "price": 200,
+    "bought": false
+  },
+  {
+    "id": "halberd-2",
+    "name": "Steel Halberd",
+    "attack": 7,
+    "price": 350,
+    "bought": false
+  },
+  {
+    "id": "halberd-3",
+    "name": "Silver Halberd",
+    "attack": 9,
+    "price": 550,
+    "bought": false
+  },
+  {
+    "id": "halberd-4",
+    "name": "Golden Halberd",
+    "attack": 11,
+    "price": 800,
+    "bought": false
+  },
+  {
+    "id": "halberd-5",
+    "name": "Dragon Halberd",
+    "attack": 13,
+    "price": 1100,
     "bought": false
   }
 ]

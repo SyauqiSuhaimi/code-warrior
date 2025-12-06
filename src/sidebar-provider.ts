@@ -42,16 +42,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
               vscode.window.showInformationMessage("Stats reset!");
             }
             break;
-          case "purchase":
-            const success = this._gameState.purchaseItem(message.itemId);
+          case "upgrade":
+            const success = this._gameState.upgradeAttribute(message.attribute);
             if (success) {
               vscode.window.showInformationMessage(
-                `Purchased ${message.itemName}!`
+                `Upgraded ${message.attributeName}!`
               );
             } else {
-              vscode.window.showWarningMessage(
-                "Not enough money or item already purchased!"
-              );
+              vscode.window.showWarningMessage("Not enough money!");
             }
             break;
         }
@@ -66,6 +64,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   public update() {
     if (this._view) {
+      const computedAttrs = this._gameState.getComputedAttributes();
       this._view.webview.postMessage({
         type: "update",
         data: {
@@ -73,8 +72,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           enemyCurrentHp: this._gameState.enemyCurrentHp,
           enemyMaxHp: this._gameState.enemyMaxHp,
           money: this._gameState.money,
-          shopItems: this._gameState.shopItems,
-          attackMultiplier: this._gameState.attackMultiplier,
+          attributes: computedAttrs,
+          upgradeCosts: {
+            damageLevel: this._gameState.getUpgradeCost("damageLevel"),
+            critChanceLevel: this._gameState.getUpgradeCost("critChanceLevel"),
+            critMultiplierLevel: this._gameState.getUpgradeCost(
+              "critMultiplierLevel"
+            ),
+          },
         },
       });
     }
@@ -88,165 +93,361 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Code Reward Stats</title>
             <style>
-                body {
-                    padding: 10px;
-                    font-family: var(--vscode-font-family);
-                    color: var(--vscode-editor-foreground);
-                    background-color: var(--vscode-editor-background);
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
                 }
+                
+                body {
+                    padding: 0;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    color: #e0e0e0;
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                    overflow-x: hidden;
+                }
+                
+                .header {
+                    background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+                    padding: 15px;
+                    border-bottom: 3px solid #e94560;
+                    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+                }
+                
+                .header-content {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .level-badge {
+                    background: linear-gradient(135deg, #ffd93d 0%, #ff6b35 100%);
+                    color: #1a1a2e;
+                    padding: 8px 20px;
+                    border-radius: 25px;
+                    font-weight: 900;
+                    font-size: 1.2em;
+                    box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                
+                .currency-display {
+                    background: rgba(255, 217, 61, 0.15);
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    border: 2px solid #ffd93d;
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    color: #ffd93d;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    box-shadow: 0 0 20px rgba(255, 217, 61, 0.2);
+                }
+                
                 .tabs {
                     display: flex;
-                    gap: 5px;
-                    margin-bottom: 15px;
-                    border-bottom: 1px solid var(--vscode-panel-border);
+                    background: rgba(15, 52, 96, 0.5);
+                    padding: 0;
+                    border-bottom: 2px solid #e94560;
                 }
+                
                 .tab {
-                    padding: 8px 16px;
+                    flex: 1;
+                    padding: 15px;
                     cursor: pointer;
-                    background: none;
+                    background: transparent;
                     border: none;
-                    color: var(--vscode-editor-foreground);
-                    opacity: 0.6;
-                    border-bottom: 2px solid transparent;
+                    color: #a0a0a0;
                     font-size: 1em;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    transition: all 0.3s ease;
+                    border-bottom: 3px solid transparent;
                 }
+                
                 .tab:hover {
-                    opacity: 0.8;
+                    background: rgba(233, 69, 96, 0.1);
+                    color: #e0e0e0;
                 }
+                
                 .tab.active {
-                    opacity: 1;
-                    border-bottom-color: var(--vscode-textLink-foreground);
+                    background: rgba(233, 69, 96, 0.2);
+                    color: #e94560;
+                    border-bottom-color: #e94560;
+                    box-shadow: inset 0 -3px 10px rgba(233, 69, 96, 0.3);
                 }
+                
                 .tab-content {
                     display: none;
+                    padding: 15px;
+                    animation: fadeIn 0.3s ease;
                 }
+                
                 .tab-content.active {
                     display: block;
                 }
-                .stat-card {
-                    background-color: var(--vscode-editor-lineHighlightBackground);
-                    padding: 15px;
-                    border-radius: 5px;
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                
+                .enemy-section {
+                    background: linear-gradient(135deg, rgba(233, 69, 96, 0.15) 0%, rgba(15, 52, 96, 0.15) 100%);
+                    padding: 20px;
+                    border-radius: 15px;
+                    margin-bottom: 15px;
+                    border: 2px solid rgba(233, 69, 96, 0.3);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+                }
+                
+                .enemy-title {
+                    text-align: center;
+                    font-size: 1.3em;
+                    font-weight: bold;
+                    color: #e94560;
+                    margin-bottom: 15px;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+                }
+                
+                .hp-container {
+                    position: relative;
                     margin-bottom: 10px;
+                }
+                
+                .hp-bar-outer {
+                    width: 100%;
+                    height: 30px;
+                    background: rgba(0, 0, 0, 0.4);
+                    border-radius: 15px;
+                    overflow: hidden;
+                    border: 2px solid #e94560;
+                    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+                    position: relative;
+                }
+                
+                .hp-bar-fill {
+                    height: 100%;
+                    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 50%, #e94560 100%);
+                    width: 100%;
+                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 0 20px rgba(233, 69, 96, 0.6);
+                    position: relative;
+                }
+                
+                .hp-bar-fill::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 50%;
+                    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
+                }
+                
+                .hp-text {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    color: white;
+                    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+                    z-index: 1;
+                }
+                
+                .stats-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 15px;
+                }
+                
+                .stat-card {
+                    background: linear-gradient(135deg, rgba(15, 52, 96, 0.6) 0%, rgba(22, 33, 62, 0.6) 100%);
+                    padding: 15px;
+                    border-radius: 12px;
+                    border: 2px solid rgba(255, 217, 61, 0.3);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                    transition: all 0.3s ease;
+                }
+                
+                .stat-card:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 6px 20px rgba(255, 217, 61, 0.4);
+                    border-color: rgba(255, 217, 61, 0.6);
+                }
+                
+                .stat-icon {
+                    font-size: 2em;
+                    margin-bottom: 8px;
                     text-align: center;
                 }
+                
                 .stat-label {
-                    font-size: 0.9em;
-                    opacity: 0.8;
+                    font-size: 0.85em;
+                    color: #a0a0a0;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                     margin-bottom: 5px;
+                    text-align: center;
                 }
+                
                 .stat-value {
-                    font-size: 1.5em;
-                    font-weight: bold;
-                    color: var(--vscode-textLink-foreground);
+                    font-size: 1.8em;
+                    font-weight: 900;
+                    color: #ffd93d;
+                    text-align: center;
+                    text-shadow: 0 2px 10px rgba(255, 217, 61, 0.3);
                 }
-                .progress-bar {
-                    width: 100%;
-                    height: 10px;
-                    background-color: var(--vscode-scrollbarSlider-background);
-                    border-radius: 5px;
-                    overflow: hidden;
-                    margin-top: 5px;
-                }
-                .progress-fill {
-                    height: 100%;
-                    background-color: var(--vscode-errorForeground);
-                    width: 100%;
-                    transition: width 0.3s ease;
-                }
+                
                 .button {
-                    background-color: var(--vscode-button-background);
-                    color: var(--vscode-button-foreground);
+                    background: linear-gradient(135deg, #e94560 0%, #c72c41 100%);
+                    color: white;
                     border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
+                    padding: 14px 24px;
+                    border-radius: 10px;
                     cursor: pointer;
                     font-size: 1em;
+                    font-weight: bold;
                     width: 100%;
                     margin-top: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
                 }
-                .button:hover {
-                    background-color: var(--vscode-button-hoverBackground);
+                
+                .button:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+                    background: linear-gradient(135deg, #ff4d6d 0%, #d63447 100%);
                 }
+                
+                .button:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+                
                 .button.danger {
-                    background-color: var(--vscode-errorForeground);
+                    background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
                 }
-                .button.danger:hover {
-                    opacity: 0.8;
-                }
+                
                 .button:disabled {
-                    opacity: 0.5;
+                    opacity: 0.4;
                     cursor: not-allowed;
+                    background: #555;
                 }
+                
                 .shop-item {
-                    background-color: var(--vscode-editor-lineHighlightBackground);
-                    padding: 15px;
-                    border-radius: 5px;
-                    margin-bottom: 10px;
+                    background: linear-gradient(135deg, rgba(15, 52, 96, 0.6) 0%, rgba(22, 33, 62, 0.6) 100%);
+                    padding: 18px;
+                    border-radius: 12px;
+                    margin-bottom: 12px;
+                    border: 2px solid rgba(255, 217, 61, 0.2);
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
                 }
+                
+                .shop-item:hover {
+                    border-color: rgba(255, 217, 61, 0.5);
+                    transform: translateX(5px);
+                    box-shadow: 0 6px 20px rgba(255, 217, 61, 0.3);
+                }
+                
                 .shop-item-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 10px;
+                    margin-bottom: 12px;
                 }
+                
                 .shop-item-name {
-                    font-size: 1.1em;
+                    font-size: 1.2em;
                     font-weight: bold;
+                    color: #ffd93d;
+                    text-shadow: 0 2px 5px rgba(255, 217, 61, 0.3);
                 }
+                
                 .shop-item-details {
                     display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 10px;
-                    font-size: 0.9em;
+                    gap: 15px;
+                    margin-bottom: 12px;
+                    flex-wrap: wrap;
                 }
+                
                 .shop-item-stat {
-                    color: var(--vscode-textLink-foreground);
+                    background: rgba(255, 217, 61, 0.1);
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 0.9em;
+                    border: 1px solid rgba(255, 217, 61, 0.3);
+                    color: #ffd93d;
+                    font-weight: 600;
                 }
+                
                 .bought-badge {
-                    background-color: var(--vscode-textLink-foreground);
-                    color: var(--vscode-editor-background);
-                    padding: 2px 8px;
-                    border-radius: 3px;
+                    background: linear-gradient(135deg, #4ecca3 0%, #2eb086 100%);
+                    color: white;
+                    padding: 5px 15px;
+                    border-radius: 20px;
                     font-size: 0.8em;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    box-shadow: 0 2px 10px rgba(78, 204, 163, 0.4);
+                }
+                
+                .empty-shop {
+                    text-align: center;
+                    padding: 40px 20px;
+                    color: #666;
                 }
             </style>
         </head>
         <body>
+            <div class="header">
+                <div class="header-content">
+                    <div class="level-badge">⚡ LVL <span id="level-header">1</span></div>
+                    <div class="currency-display">💰 <span id="money-header">0</span></div>
+                </div>
+            </div>
+
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('stats')">Stats</button>
-                <button class="tab" onclick="switchTab('shop')">Shop</button>
+                <button class="tab active" onclick="switchTab('stats')">⚔️ Combat</button>
+                <button class="tab" onclick="switchTab('attributes')">📊 Attributes</button>
             </div>
 
             <div id="stats-tab" class="tab-content active">
-                <div class="stat-card">
-                    <div class="stat-label">Level</div>
-                    <div class="stat-value" id="level">1</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-label">Enemy Health</div>
-                    <div class="stat-value"><span id="hp">100</span> / <span id="maxHp">100</span></div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="hpBar"></div>
+                <div class="enemy-section">
+                    <div class="enemy-title">🐉 Enemy Boss</div>
+                    <div class="hp-container">
+                        <div class="hp-bar-outer">
+                            <div class="hp-bar-fill" id="hpBar"></div>
+                        </div>
+                        <div class="hp-text"><span id="hp">100</span> / <span id="maxHp">100</span> HP</div>
                     </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-label">Money</div>
-                    <div class="stat-value">$<span id="money">0</span></div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-label">Gold</div>
+                        <div class="stat-value">$<span id="money">0</span></div>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-label">Attack Power</div>
-                    <div class="stat-value"><span id="attack">1</span>x</div>
-                </div>
+                <button class="button danger" onclick="resetStats()">🔄 Reset Progress</button>
 
-                <button class="button danger" onclick="resetStats()">Reset Progress</button>
             </div>
 
-            <div id="shop-tab" class="tab-content">
-                <div id="shop-items"></div>
+            <div id="attributes-tab" class="tab-content">
+                <div id="attribute-upgrades"></div>
             </div>
 
             <script>
@@ -269,34 +470,69 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     vscode.postMessage({ type: 'reset' });
                 }
 
-                function purchaseItem(itemId, itemName) {
+                function upgradeAttribute(attribute, attributeName) {
                     vscode.postMessage({ 
-                        type: 'purchase',
-                        itemId: itemId,
-                        itemName: itemName
+                        type: 'upgrade',
+                        attribute: attribute,
+                        attributeName: attributeName
                     });
                 }
 
-                function renderShop() {
-                    const shopContainer = document.getElementById('shop-items');
-                    if (!currentData.shopItems) return;
+                function renderAttributes() {
+                    const container = document.getElementById('attribute-upgrades');
+                    if (!currentData.attributes || !currentData.upgradeCosts) {
+                        container.innerHTML = '<div class="empty-shop">Loading...</div>';
+                        return;
+                    }
 
-                    shopContainer.innerHTML = currentData.shopItems.map(item => \`
+                    const attrs = currentData.attributes;
+                    const attributes = [
+                        {
+                            key: 'damageLevel',
+                            name: 'Damage',
+                            icon: '⚔️',
+                            description: 'Increase base damage per line',
+                            current: attrs.damageLevel || 1,
+                            value: attrs.damage || 1,
+                            cost: currentData.upgradeCosts.damageLevel || 100
+                        },
+                        {
+                            key: 'critChanceLevel',
+                            name: 'Crit Chance',
+                            icon: '🎯',
+                            description: 'Increase chance to deal critical hits',
+                            current: attrs.critChanceLevel || 0,
+                            value: (attrs.critChance || 0) + '%',
+                            cost: currentData.upgradeCosts.critChanceLevel || 150
+                        },
+                        {
+                            key: 'critMultiplierLevel',
+                            name: 'Crit Multiplier',
+                            icon: '💥',
+                            description: 'Increase critical hit damage multiplier',
+                            current: attrs.critMultiplierLevel || 0,
+                            value: (attrs.critMultiplier || 1.5) + 'x',
+                            cost: currentData.upgradeCosts.critMultiplierLevel || 200
+                        }
+                    ];
+
+                    container.innerHTML = attributes.map(attr => \`
                         <div class="shop-item">
                             <div class="shop-item-header">
-                                <span class="shop-item-name">\${item.name}</span>
-                                \${item.bought ? '<span class="bought-badge">OWNED</span>' : ''}
+                                <span class="shop-item-name">\${attr.icon} \${attr.name}</span>
+                                <span class="bought-badge" style="background: linear-gradient(135deg, #4ecca3 0%, #2eb086 100%);">Lvl \${attr.current}</span>
                             </div>
+                            <div style="color: #a0a0a0; margin-bottom: 10px; font-size: 0.9em;">\${attr.description}</div>
                             <div class="shop-item-details">
-                                <span class="shop-item-stat">⚔️ Attack: +\${item.attack}</span>
-                                <span class="shop-item-stat">💰 Price: $\${item.price}</span>
+                                <span class="shop-item-stat">Current: \${attr.value}</span>
+                                <span class="shop-item-stat">💰 \${attr.cost}</span>
                             </div>
                             <button 
                                 class="button" 
-                                onclick="purchaseItem('\${item.id}', '\${item.name}')"
-                                \${item.bought || (currentData.money < item.price) ? 'disabled' : ''}
+                                onclick="upgradeAttribute('\${attr.key}', '\${attr.name}')"
+                                \${currentData.money < attr.cost ? 'disabled' : ''}
                             >
-                                \${item.bought ? 'Already Owned' : (currentData.money < item.price ? 'Not Enough Money' : 'Purchase')}
+                                \${currentData.money < attr.cost ? '🔒 Locked' : '⬆️ Upgrade'}
                             </button>
                         </div>
                     \`).join('');
@@ -307,17 +543,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     switch (message.type) {
                         case 'update':
                             currentData = message.data;
-                            const { level, enemyCurrentHp, enemyMaxHp, money, attackMultiplier } = message.data;
-                            document.getElementById('level').innerText = level;
-                            document.getElementById('hp').innerText = enemyCurrentHp;
+                            const { level, enemyCurrentHp, enemyMaxHp, money, attributes } = message.data;
+                            
+                            document.getElementById('level-header').innerText = level;
+                            document.getElementById('hp').innerText = Math.max(0, Math.floor(enemyCurrentHp));
                             document.getElementById('maxHp').innerText = enemyMaxHp;
                             document.getElementById('money').innerText = money;
-                            document.getElementById('attack').innerText = attackMultiplier || 1;
+                            document.getElementById('money-header').innerText = money;
                             
                             const percentage = Math.max(0, (enemyCurrentHp / enemyMaxHp) * 100);
                             document.getElementById('hpBar').style.width = percentage + '%';
                             
-                            renderShop();
+                            renderAttributes();
                             break;
                     }
                 });
